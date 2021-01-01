@@ -32,6 +32,7 @@
 $ npm install
 ```
 
+
 ## Running the app
 
 ```bash
@@ -45,7 +46,7 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Test
+## Testing
 
 ```bash
 # unit tests
