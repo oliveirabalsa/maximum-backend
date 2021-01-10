@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 
-// deploy
 @Injectable()
 export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
