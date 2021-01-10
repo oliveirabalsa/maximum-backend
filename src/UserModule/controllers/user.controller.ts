@@ -7,7 +7,7 @@ import { UserService } from '../services/user.service';
 export class UserController {
   constructor(private userService: UserService) {}
 
-  @UseGuards(new AuthGuard())
+  // @UseGuards(new AuthGuard())
   @Get('user')
   async all() {
     return await this.userService.all();
