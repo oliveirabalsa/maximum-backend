@@ -1,13 +1,51 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { ProfileEnum } from '../enum/profile.enum';
+import { AddressDTO } from 'src/AddressModule/dtos/address.dto';
 
 export class UserDTO {
-  @IsNotEmpty()
+  @IsEmail()
   @IsString()
-  username: string;
+  email: string;
 
   @IsNotEmpty()
   @IsString()
   password: string;
+
+  // enum (BUYER, SELLER, DELIVERY)
+  @IsNotEmpty()
+  @IsEnum(ProfileEnum)
+  profile: ProfileEnum;
+
+  @IsString()
+  @IsOptional()
+  cpf?: string;
+
+  @IsString()
+  @IsOptional()
+  cnpj?: string;
+
+  // Caso seja vendedor o endereco do local
+  // Relationship with address entity.
+  @IsOptional()
+  address?: AddressDTO;
+
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  image?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }
 
 export class UserRO {
@@ -20,9 +58,38 @@ export class UserRO {
   created_at: Date;
 
   @IsNotEmpty()
+  @IsString()
+  email: string;
+
+  // enum (BUYER, SELLER, DELIVERY)
+  @IsNotEmpty()
+  @IsEnum(ProfileEnum)
+  profile: ProfileEnum;
+
+  @IsString()
+  @IsOptional()
+  cpf?: string;
+
+  @IsString()
+  @IsOptional()
+  cnpj?: string;
+
+  // Caso seja vendedor o endereco do local
+  // Relationship with address entity.
+  @IsOptional()
+  address?: AddressDTO;
+
   @IsNotEmpty()
   @IsString()
-  username: string;
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  image?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
 
   @IsString()
   token?: string;

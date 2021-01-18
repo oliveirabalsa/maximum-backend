@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UserEntity } from '../entities/user.entity';
+import { CreateUserDTO } from '../dtos/loginUser.dto';
 
 @Injectable()
 export class UserService {
@@ -13,16 +14,23 @@ export class UserService {
   ) {}
 
   async all(): Promise<UserRO[]> {
-    const users = await this.userRepository.find();
+    const users = await this.userRepository.find({ relations: ['address'] });
     return users.map((user) => user.toResponseObject(false));
   }
-  async login(user: UserDTO): Promise<UserRO> {
-    const { username, password } = user;
+
+  async login(user: CreateUserDTO): Promise<UserRO> {
+    const { email } = user;
     const userResponse = await this.userRepository.findOne({
-      where: { username },
+      where: { email },
     });
+
+    if (!userResponse)
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+
     const hash = userResponse.password;
-    if (!user || password! != hash) {
+    const isValid = await this.comparePassword(user.password, hash);
+
+    if (!user || !isValid) {
       throw new HttpException(
         'Invalid username/password',
         HttpStatus.BAD_REQUEST,
@@ -30,21 +38,27 @@ export class UserService {
     }
     return userResponse.toResponseObject();
   }
-  async register(user: UserDTO): Promise<UserRO> {
-    let { username, password } = user;
+
+  async register(user: any): Promise<UserRO> {
+    let { email, password } = user;
     let userResponse = await this.userRepository.findOne({
-      where: { username },
+      where: { email },
     });
+    password = await bcrypt.hash(password, 10);
     if (userResponse) {
       throw new HttpException('User already exists', HttpStatus.BAD_GATEWAY);
     }
-    password = await bcrypt.hash(password, 10);
 
-    await this.userRepository.create(user);
-    await this.userRepository.save(user);
+    await this.userRepository.create({ ...user, password });
+    await this.userRepository.save({ ...user, password });
     userResponse = await this.userRepository.findOne({
-      where: { username },
+      where: { email },
     });
     return userResponse.toResponseObject(false);
+  }
+
+  private async comparePassword(attempt: string, hash: string) {
+    const response = await bcrypt.compare(attempt, hash);
+    return response;
   }
 }

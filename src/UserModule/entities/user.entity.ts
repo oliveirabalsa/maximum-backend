@@ -1,9 +1,10 @@
+import { ProfileEnum } from './../enum/profile.enum';
 import { UserRO } from '../dtos/user.dto';
-import { BeforeInsert, Column, CreateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, JoinColumn, OneToOne } from 'typeorm';
 import { PrimaryGeneratedColumn } from 'typeorm/decorator/columns/PrimaryGeneratedColumn';
 import { Entity } from 'typeorm/decorator/entity/Entity';
-import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { Address } from 'src/AddressModule/entities/address.entity';
 
 @Entity('user')
 export class UserEntity {
@@ -17,19 +18,59 @@ export class UserEntity {
     type: 'text',
     unique: true,
   })
-  username: string;
+  email: string;
 
   @Column('text')
-  password: string;
+  profile: ProfileEnum;
 
-  @BeforeInsert()
-  async hashPassword() {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
+  @OneToOne(() => Address)
+  @JoinColumn()
+  public address?: Address;
+
+  @Column({ nullable: true, type: 'text' })
+  password?: string;
+
+  @Column({ nullable: true, type: 'text' })
+  cpf?: string;
+
+  @Column({ nullable: true, type: 'text' })
+  cnpj?: string;
+
+  @Column('text')
+  name: string;
+
+  @Column({ nullable: true, type: 'text' })
+  image?: string;
+
+  @Column({ nullable: true, type: 'text' })
+  description?: string;
 
   toResponseObject(showToken = true): UserRO {
-    const { id, created_at, username, token } = this;
-    const repsonseObject: UserRO = { id, created_at, username };
+    const {
+      id,
+      created_at,
+      email,
+      token,
+      profile,
+      name,
+      image,
+      cpf,
+      cnpj,
+      description,
+      address,
+    } = this;
+    const repsonseObject: UserRO = {
+      id,
+      created_at,
+      email,
+      profile,
+      name,
+      image,
+      cpf,
+      cnpj,
+      description,
+      address,
+    };
 
     if (showToken) {
       repsonseObject.token = token;
@@ -37,17 +78,12 @@ export class UserEntity {
     return repsonseObject;
   }
 
-  async comparePassword(attempt: string, hash: string) {
-    const response = await bcrypt.compare(attempt, hash);
-    return response;
-  }
-
   private get token() {
-    const { id, username } = this;
+    const { id, email } = this;
     return jwt.sign(
       {
         id,
-        username,
+        email,
       },
       process.env.SECRET,
       { expiresIn: '7d' },
